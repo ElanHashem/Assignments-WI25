@@ -14,8 +14,7 @@ def create_board():
     np.ndarray:
         A 2D numpy array of shape (ROW_COUNT, COLUMN_COUNT) filled with zeros (float).
     """
-    # TODO: implement
-    pass
+    return np.zeros((ROW_COUNT,COLUMN_COUNT), dtype=int)
 
 
 def drop_piece(board, row, col, piece):
@@ -32,7 +31,7 @@ def drop_piece(board, row, col, piece):
     None. The 'board' is modified in-place. Do NOT return a new board!
     """
     # TODO: implement
-    pass
+    board[row][col] = piece
 
 
 def is_valid_location(board, col):
@@ -47,7 +46,11 @@ def is_valid_location(board, col):
     bool: True if it's valid to drop a piece in this column, False otherwise.
     """
     # TODO: implement
-    pass
+    if board[0][col] == 0:
+        return True
+    else:
+        return False
+    
 
 
 def get_next_open_row(board, col):
@@ -62,8 +65,11 @@ def get_next_open_row(board, col):
     int: The row index of the lowest empty cell in this column.
     """
     # TODO: implement
-    pass
-
+    rows, cols = board.shape
+    for row in reversed(range(rows)):
+        if board[row][col] == 0:
+            return row
+    return None
 
 def winning_move(board, piece):
     """
@@ -78,7 +84,22 @@ def winning_move(board, piece):
     This requires checking horizontally, vertically, and diagonally.
     """
     # TODO: implement
-    pass
+    rows, cols = board.shape
+    pieces = []
+    for row in range(rows):
+        for col in range(cols):
+            if board[row][col] == piece:
+                pieces.append((row,col))
+    for tup in pieces:
+        if (tup[0],tup[1]+1) in pieces and (tup[0],tup[1]+2) in pieces and (tup[0],tup[1]+3) in pieces:
+            return True
+        if (tup[0]+1,tup[1]) in pieces and (tup[0]+2,tup[1]) in pieces and (tup[0]+3,tup[1]) in pieces:
+            return True
+        if (tup[0]-1,tup[1]+1) in pieces and (tup[0]-2,tup[1]+2) in pieces and (tup[0]-3,tup[1]+3) in pieces:
+            return True
+        if (tup[0]-1,tup[1]-1) in pieces and (tup[0]-2,tup[1]-2) in pieces and (tup[0]-3,tup[1]-3) in pieces:
+            return True
+    return False
 
 
 def get_valid_locations(board):
@@ -92,8 +113,12 @@ def get_valid_locations(board):
     list of int: The list of column indices that are not full.
     """
     # TODO: implement
-    pass
-
+    valid_loc = []
+    rows, cols = board.shape
+    for col in range(cols):
+        if get_next_open_row(board, col) is not None:
+            valid_loc.append(col)
+    return col
 
 def is_terminal_node(board):
     """
@@ -108,8 +133,11 @@ def is_terminal_node(board):
     bool: True if the game is over, False otherwise.
     """
     # TODO: implement
-    pass
-
+    if winning_move(board,1) or winning_move(board,2):
+        return True
+    if len(get_valid_locations(board)) == 0:
+        return True
+    return False
 
 def score_position(board, piece):
     """
@@ -152,7 +180,59 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
           score: The heuristic score of the board state.
     """
     # TODO: implement
-    pass
+    
+    def minimax_rec(board, depth, alpha, beta, maximizingPlayer, current_depth):
+        
+
+        ROWS, COLS = board.shape
+        valid_columns = [c for c in range(COLS) if board[0, c] == 0]  # Available moves
+
+        # Base case: Reached max depth or no valid moves
+        if current_depth == depth or len(valid_columns) == 0:
+            return None, score_position(board, 1 if maximizingPlayer else 2)
+
+        if maximizingPlayer:
+            max_score = -np.inf
+            best_column = None
+
+            for col in valid_columns:
+                row = get_next_open_row(board, col)
+                temp_board = board.copy()
+                temp_board[row, col] = 1  # Assume maximizing player is Player 1
+
+                _, score = minimax_rec(temp_board, depth, alpha, beta, False, current_depth + 1)
+
+                if score > max_score:
+                    max_score = score
+                    best_column = col
+
+                alpha = max(alpha, score)
+                if beta <= alpha:  # Alpha-beta pruning
+                    break
+
+            return best_column, max_score
+
+        else:  # Minimizing player
+            min_score = np.inf
+            best_column = None
+
+            for col in valid_columns:
+                row = get_next_open_row(board, col)
+                temp_board = board.copy()
+                temp_board[row, col] = 2  # Assume minimizing player is Player 2
+
+                _, score = minimax_rec(temp_board, depth, alpha, beta, True, current_depth + 1)
+
+                if score < min_score:
+                    min_score = score
+                    best_column = col
+
+                beta = min(beta, score)
+                if beta <= alpha:  # Alpha-beta pruning
+                    break
+
+            return best_column, min_score 
+    return minimax_rec(board, depth, alpha, beta, maximizingPlayer, 0)
 
 
 if __name__ == "__main__":

@@ -40,7 +40,12 @@ def find_empty_cell(board):
         - If there are no empty cells, returns None.
     """
     # TODO: implement
-    pass
+    rows, cols =  board.shape
+    for row in rows:
+        for col in cols:
+            if board[row][col] == 0:
+                return (row,col)
+    return None       
 
 
 def is_valid(board, row, col, num):
@@ -60,9 +65,22 @@ def is_valid(board, row, col, num):
     bool: True if valid, False otherwise.
     """
     # TODO: implement
-    pass
+    if num in board[row]:
+        return False
 
+    for r in range(9):
+        if board[r][col] == num:
+            return False
 
+    box_row_start = (row // 3) * 3  # Get the starting row index of the 3x3 grid
+    box_col_start = (col // 3) * 3  # Get the starting column index of the 3x3 grid
+
+    for r in range(box_row_start, box_row_start + 3):
+        for c in range(box_col_start, box_col_start + 3):
+            if board[r][c] == num:
+                return False
+
+    return True  
 def solve_sudoku(board):
     """
     Solves the Sudoku puzzle in 'board' using backtracking.
@@ -76,7 +94,23 @@ def solve_sudoku(board):
         - False if the puzzle is unsolvable.
     """
     # TODO: implement
-    pass
+    empty_cell = find_empty_cell(board)
+    
+    if not empty_cell:  
+        return True
+
+    row, col = empty_cell
+
+    for num in range(1, 10):  # Try numbers 1-9
+        if is_valid(board, row, col, num):
+            board[row][col] = num  # Place the number
+
+            if solve_sudoku(board):  
+                return True
+
+            board[row][col] = 0  # Backtrack if the solution doesn't work
+
+    return False  
 
 
 def is_solved_correctly(board):
@@ -93,7 +127,29 @@ def is_solved_correctly(board):
     bool: True if the board is correctly solved, False otherwise.
     """
     # TODO: implement
-    pass
+    def has_all_numbers(nums):
+        """Checks if a list contains exactly the numbers 1-9 once."""
+        return sorted(nums) == list(range(1, 10))
+
+    # Check rows
+    for row in board:
+        if not has_all_numbers(row):
+            return False
+
+    # Check columns
+    for col in range(9):
+        column_values = [board[row][col] for row in range(9)]
+        if not has_all_numbers(column_values):
+            return False
+
+    # Check 3x3 sub-boxes
+    for box_row in range(0, 9, 3):
+        for box_col in range(0, 9, 3):
+            box_values = [board[r][c] for r in range(box_row, box_row + 3) for c in range(box_col, box_col + 3)]
+            if not has_all_numbers(box_values):
+                return False
+
+    return True  
 
 
 if __name__ == "__main__":
